@@ -24,6 +24,12 @@ An ArcGIS Online account with a feature layer to dump stuff into.
 
 Credentials for all the above (SharePoint, SQL, ArcGIS).
 
+Example Form:
+
+<img width="815" alt="Screenshot 2025-03-03 at 6 12 03 PM" src="https://github.com/user-attachments/assets/03fde0d3-4d77-42dc-ab2d-883341c33174" />
+
+
+
 Setup
 Install the goodies:
 Open your terminal and run:
