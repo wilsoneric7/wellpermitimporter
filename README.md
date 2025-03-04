@@ -1,45 +1,60 @@
-# wellpermitimporter
-
 Well Permit GIS Importer
-Hey there! This is a Python script I threw together to grab well permit forms (PDFs) from SharePoint, pull out the key details, stash them in a SQL Server database, and then shove them into ArcGIS Online as points on a map. It’s pretty handy if you’re dealing with stuff like IDWR well permits and want to cut down on manual GIS work. I’m no pro, but it works for me—hope it does for you too!
+Hey! This is a Python script I hacked together to pull well permit PDFs from SharePoint, yank out the important bits (like owner and coordinates), stash them in SQL Server, and then plop them into ArcGIS Online as map points. It’s great for cutting out manual GIS grunt work, like if you’re dealing with IDWR well permits. I’m no wizard, but it gets the job done—hope it works for you too!
 What It Does
-Connects to SharePoint, downloads a well permit PDF.
+Grabs a well permit PDF from SharePoint.
 
-Reads the PDF and grabs stuff like owner name, coordinates, and well purpose.
+Digs out details like owner name, Township/Range, lat/long, and well purpose.
 
-Sticks the data into a SQL Server table.
+Drops the data into a SQL Server table.
 
-Pulls that data out and adds it as points to an ArcGIS Online layer.
+Pulls that data and adds it as points to an ArcGIS Online layer.
 
 What You’ll Need
-Python 3 (I used 3.9, but 3.7+ should be fine).
+Python 3: I used 3.9, but 3.7+ should work.
 
-Some Python libraries (see below).
+Libraries: See the “Dependencies” section below.
 
-A SharePoint site with a library (like "Well Permits") where PDFs live.
+SharePoint: A site with a library (e.g., “Well Permits”) where PDFs are uploaded.
 
-A SQL Server database with a table set up (I’ll show you the table).
+SQL Server: A database with a WellPermits table (script included below).
 
-An ArcGIS Online account with a feature layer to dump stuff into.
+ArcGIS Online: An account with a feature layer you can edit.
 
-Credentials for all the above (SharePoint, SQL, ArcGIS).
-
-Example Form:
-
-<img width="815" alt="Screenshot 2025-03-03 at 6 12 03 PM" src="https://github.com/user-attachments/assets/03fde0d3-4d77-42dc-ab2d-883341c33174" />
-
-
+Credentials: For SharePoint, SQL Server, and ArcGIS Online.
 
 Setup
-Install the goodies:
+1. Get Python Ready
+Check if you’ve got Python:
+Windows: Open Command Prompt (Win + R, type cmd), run python --version.
+
+Mac/Linux: Open Terminal, run python3 --version.
+
+See something like Python 3.9.5? You’re set. If not, grab it from python.org/downloads.
+
+Windows tip: Check “Add Python to PATH” during install.
+
+No Python? Install it, then test again.
+
+2. Grab the Dependencies
 Open your terminal and run:
 
 pip install pdfplumber pandas pyodbc office365-rest-python-client arcgis
 
-That’s it—those handle PDFs, data, SQL, SharePoint, and ArcGIS.
+If pip flops, try python -m pip install ... or pip3 install ... (Mac/Linux).
 
-SQL Server Table:
-Fire up SQL Server Management Studio (or whatever you use) and run this to make a table:
+What they do:
+pdfplumber: Reads PDFs.
+
+pandas: Handles data tables.
+
+pyodbc: Talks to SQL Server.
+
+office365-rest-python-client: Hits up SharePoint.
+
+arcgis: Connects to ArcGIS Online.
+
+3. Set Up SQL Server
+Open SQL Server Management Studio (or your tool) and run this to make the table:
 sql
 
 CREATE TABLE WellPermits (
@@ -58,20 +73,31 @@ CREATE TABLE WellPermits (
     GISImported BIT DEFAULT 0
 );
 
-This is where the well data hangs out.
+This holds your well data. Tweak it if your DB’s picky.
 
-Tweak the Script:
-Grab the script below and update these bits with your own info:
-site_url, username, password (SharePoint).
+4. Save the Script
+Copy the code below into a file called well_importer.py.
 
-conn_str (SQL Server connection).
+Stick it in a folder like C:\Users\YourName\WellImporter (Windows) or ~/Documents/WellImporter (Mac/Linux).
 
-gis_url, layer_item_id, your_username, your_password (ArcGIS Online).
+5. Tweak the Config
+Open well_importer.py in Notepad, VS Code, or whatever.
 
-file_name (the PDF name in SharePoint).
+Update these with your stuff:
+SharePoint: site_url, username, password, library_name, file_name.
 
-The Code
-Save this as well_importer.py or whatever you like:
+SQL Server: conn_str (server name, DB, etc.).
+
+ArcGIS: gis_url, layer_item_id, your_username, your_password.
+
+Example: If your SharePoint is https://company.sharepoint.com/sites/IDWR, swap that in.
+
+6. Test PDF
+Drop a sample well permit PDF (e.g., WellPermit_Example.pdf) into your SharePoint library.
+
+Set file_name in the script to match.
+
+The Code (well_importer.py)
 python
 
 import pdfplumber
@@ -197,33 +223,123 @@ if __name__ == "__main__":
     store_in_sql(form_data, conn_str)
     import_to_gis_from_sql(conn_str, gis_url, layer_item_id)
 
+Where to Run It on Your Computer
+Folder: Pick a spot like C:\Users\YourName\WellImporter (Windows) or ~/Documents/WellImporter (Mac/Linux). Save well_importer.py there. Keeps it tidy.
+
+Terminal:
+Windows: Open Command Prompt (Win + R, cmd), cd C:\Users\YourName\WellImporter.
+
+Mac/Linux: Open Terminal, cd ~/Documents/WellImporter.
+
+Run It:
+Windows: python well_importer.py
+
+Mac/Linux: python3 well_importer.py
+
+If Python’s not found, reinstall with “Add to PATH” checked (Windows) or use brew install python (Mac), sudo apt install python3 (Linux).
+
 How to Use It
-Toss your well permit PDF into your SharePoint library.
+Upload your well permit PDF to your SharePoint library.
 
-Update the script with your details (URLs, usernames, etc.).
+Update the script with your SharePoint, SQL, and ArcGIS details.
 
-Run it: python well_importer.py.
+Open terminal, cd to your folder, and run the script.
 
-Check your SQL Server table and ArcGIS Online layer—boom, it’s there!
+Check SQL Server (WellPermits table) and ArcGIS Online (your layer) to see the magic.
+
+Stuff in This Repo
+well_importer.py: The main script.
+
+README.md: This file you’re reading.
+
+create_table.sql: The SQL script for the WellPermits table (below).
+
+(Optional) sample.pdf: A fake well permit PDF if I had one handy—make your own for testing.
+
+create_table.sql
+sql
+
+CREATE TABLE WellPermits (
+    PermitID INT IDENTITY(1,1) PRIMARY KEY,
+    Owner NVARCHAR(100),
+    Township NVARCHAR(10),
+    Range NVARCHAR(10),
+    Section INT,
+    Quarter NVARCHAR(20),
+    Latitude FLOAT,
+    Longitude FLOAT,
+    Purpose NVARCHAR(50),
+    Depth INT,
+    Flow INT,
+    ProcessedDate DATETIME DEFAULT GETDATE(),
+    GISImported BIT DEFAULT 0
+);
 
 Tips
-If the PDF format changes, tweak the regex patterns in extract_form_data. They’re picky about exact matches.
+Regex in extract_form_data is fussy—if your PDF’s different, tweak those patterns.
 
-SharePoint passwords in plain text are sketchy—look into OAuth if you’re feeling fancy.
+SharePoint passwords in the script? Kinda sketchy. Look into OAuth if you’ve got time.
 
-Test with a dummy PDF first. I messed up the lat/long conversion a couple times before I got it right.
+Test with a dummy PDF first—I botched the lat/long math a couple times.
 
 What Could Go Wrong
-SharePoint might barf if the file isn’t found—double-check file_name.
+SharePoint: File not found? Check file_name.
 
-SQL Server might choke on bad data (e.g., missing numbers). Add some error checks if you’re paranoid.
+SQL: Bad data (e.g., missing numbers) might crash it—add error checks if you’re worried.
 
-ArcGIS Online needs edit perms on the layer, or it’ll just sit there complaining.
+ArcGIS: No edit perms on the layer? It’ll whine.
 
 Future Ideas
-Loop through all PDFs in the SharePoint folder instead of one at a time.
+Loop through all PDFs in SharePoint instead of one.
 
-Hook it up to Power Automate to run when a new PDF drops.
+Hook it to Power Automate for auto-runs.
 
-Add a log file so you know what’s up.
+Add a log file to track what’s happening.
+
+Fork it, tweak it, yell at me if it breaks. Happy coding!
+What to Include in the GitHub Repo
+Here’s what I’d toss into the repo so anyone (including you) can grab it and go:
+well_importer.py:
+The script above. Main deal.
+
+README.md:
+The text above, saved as README.md. GitHub loves this—it’s your landing page.
+
+create_table.sql:
+A separate file with the SQL table script. Makes it easy to set up the DB.
+
+Optional: requirements.txt:
+A file listing dependencies for pip. Add this:
+
+pdfplumber
+pandas
+pyodbc
+office365-rest-python-client
+arcgis
+
+Then folks can just run pip install -r requirements.txt.
+
+Optional: Sample PDF:
+If you’ve got a dummy well permit PDF, throw it in as sample.pdf. I’d make one matching the regex (e.g., “Well Owner Name: John Doe”, etc.), but you’d need to whip that up since I can’t here.
+
+Optional: .gitignore:
+Add this to keep junk out of the repo:
+
+__pycache__/
+*.pyc
+*.pyo
+*.pdf  # Unless you include a sample
+
+Folder Structure
+
+WellImporter/
+│
+├── well_importer.py
+├── README.md
+├── create_table.sql
+├── requirements.txt  (optional)
+├── sample.pdf        (optional, if you make one)
+└── .gitignore        (optional)
+
+
 
